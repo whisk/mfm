@@ -1,0 +1,5 @@
+M.FM audiotracks management utility
+
+Requirements:
+- ffmpeg
+- mp3wrap
