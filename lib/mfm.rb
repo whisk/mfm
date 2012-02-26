@@ -21,7 +21,6 @@ module MFM
       if (@data['trackinfo']['duration'] =~ (/(?:(\d+):)?(\d+)/))
         @duration = $1.to_i * 60 + $2.to_i
       end
-      puts @data.inspect
     end
 
     def trackname
@@ -45,8 +44,6 @@ module MFM
       parts = convert_to_mp3(parts)
       joined = join_parts(parts, "#{MFM.settings[:tmp_dir]}/#{filename}.joined")
       trimmed = trim(joined, filename)
-
-      puts parts.inspect
     end
 
     private
