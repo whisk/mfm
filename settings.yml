@@ -1,4 +1,7 @@
+bitrate: 32k
 ffmpeg_bin: /opt/local/bin/ffmpeg
 mp3wrap_bin: /opt/local/bin/mp3wrap
-track_part_duration: 62
+part_raw_duration: 62
+part_offset: 1
+part_duration: 60
 tmp_dir: /tmp

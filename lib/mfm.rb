@@ -42,21 +42,20 @@ module MFM
 
     def save_as_mp3(filename)
       parts = download_parts
+      parts = convert_to_mp3(parts)
+      joined = join_parts(parts, "#{MFM.settings[:tmp_dir]}/#{filename}.joined")
+      trimmed = trim(joined, filename)
 
-
-
-      puts files.inspect
+      puts parts.inspect
     end
 
     private
 
     def track_parts
-      t = 0
-      i = 1
+      i = 0
       files = []
-      while (t <= duration) do
+      while (i < (duration.to_f / MFM.settings[:part_raw_duration]).ceil + 1) do
         files << format_track_part_url(@data['station']['file'], i)
-        t += MFM.settings[:track_part_duration]
         i += 1
       end
 
@@ -69,8 +68,9 @@ module MFM
         'MM'   => time.strftime('%m'),
         'DD'   => time.strftime('%d'),
         'HH'   => time.strftime('%H'),
-        'NN'   => sprintf('%02d', num),
+        'NN'   => sprintf('%02d', time.strftime('%M').to_i + num),
       }
+      
       data.each do |k, v|
         tpl = tpl.sub(/#{k}/, v)
       end
@@ -82,13 +82,47 @@ module MFM
       parts = []
       i = 1
       track_parts.each do |url|
-        part = open("#{MFM.settings[:tmp_dir]}/#{}.part#{i}", 'wb')
+        part = open("#{MFM.settings[:tmp_dir]}/#{File.basename(url)}.part#{i}", 'wb')
         part.write(open(url).read)
         parts << part.path
         i += 1
       end
 
       parts
+    end
+
+    def convert_to_mp3(parts)
+      converted_parts = []
+
+      parts.each do |part_path|
+        converted_part_path = "#{part_path}.mp3"
+        `#{MFM.settings[:ffmpeg_bin]} -y -i '#{part_path}' -ss #{MFM.settings[:part_offset]} -t #{MFM.settings[:part_duration]} -ab #{MFM.settings[:bitrate]} -f mp3 -vn '#{converted_part_path}'`
+        converted_parts << converted_part_path
+        File.unlink(part_path)
+      end
+
+      converted_parts
+    end
+
+    def join_parts(parts, joined_path)
+      joined = File.open(joined_path, 'wb')
+      parts.each do |part_path|
+        File.open(part_path, 'rb') do |part|
+          while buff = part.read(4096)
+            joined.write(buff)
+          end
+        end
+        File.unlink(part_path)
+      end
+      joined.close
+
+      return joined.path
+    end
+
+    def trim(joined, trimmed)
+      `#{MFM.settings[:ffmpeg_bin]} -y -i '#{joined}' -ss #{time.strftime('%S')} -t #{duration} -f mp3 -acodec copy -vn '#{trimmed}'`
+
+      trimmed
     end
   end
 
