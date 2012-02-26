@@ -1,4 +1,4 @@
-bitrate: 32k
+bitrate: 64k
 ffmpeg_bin: /opt/local/bin/ffmpeg
 mp3wrap_bin: /opt/local/bin/mp3wrap
 part_raw_duration: 62
