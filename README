@@ -1,4 +1,9 @@
 M.FM audiotracks management utility
 
+Usage:
+  ruby download_top100.rb <radiostation code> [directory]
+For example:
+  ruby download_top100.rb FM_101.7 nashe
+
 Requirements:
 - ffmpeg with mp3 encoder
