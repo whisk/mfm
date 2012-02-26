@@ -1,4 +1,5 @@
 require 'open-uri'
+require 'ftools'
 
 module MFM
   @@settings = {}
@@ -40,10 +41,14 @@ module MFM
     end
 
     def save_as_mp3(filename)
-      parts = download_parts
+      tmp_filename = Time.now.to_i.to_s
+
+      parts = download_parts(tmp_filename)
       parts = convert_to_mp3(parts)
-      joined = join_parts(parts, "#{MFM.settings[:tmp_dir]}/#{filename}.joined")
-      trimmed = trim(joined, filename)
+      joined = join_parts(parts, "#{MFM.settings[:tmp_dir]}/#{tmp_filename}.joined")
+      trimmed = trim(joined, tmp_filename)
+
+      File.move(tmp_filename, filename)
     end
 
     private
@@ -75,11 +80,11 @@ module MFM
       return tpl
     end
 
-    def download_parts
+    def download_parts(tmp_filename)
       parts = []
       i = 1
       track_parts.each do |url|
-        part = open("#{MFM.settings[:tmp_dir]}/#{File.basename(url)}.part#{i}", 'wb')
+        part = open("#{MFM.settings[:tmp_dir]}/#{tmp_filename}.part#{i}", 'wb')
         part.write(open(url).read)
         parts << part.path
         i += 1
@@ -118,6 +123,7 @@ module MFM
 
     def trim(joined, trimmed)
       `#{MFM.settings[:ffmpeg_bin]} -y -i '#{joined}' -ss #{time.strftime('%S')} -t #{duration} -f mp3 -acodec copy -vn '#{trimmed}'`
+      File.unlink(joined)
 
       trimmed
     end
